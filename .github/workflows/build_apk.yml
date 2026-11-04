@@ -2,40 +2,36 @@ name: Build Souq Horan APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Source
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
+          distribution: 'temurin'
 
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.7'
+          gradle-version: '8.2'
 
-      - name: Generate Keystore and Build Signed APK
-        run: |
-          keytool -genkeypair -v \
-            -keystore app/release.keystore \
-            -alias souqhoran \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass Horan8932780 -keypass Horan8932780 \
-            -dname "CN=Souq Horan, OU=Marketplace, O=SouqHoran, L=Daraa, S=Hauran, C=SY"
-          gradle assembleRelease
-          cp app/build/outputs/apk/release/app-release.apk souq-horan.apk
+      - name: Build Debug APK
+        run: gradle assembleDebug --no-daemon
 
-      - name: Upload Ready APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: souq-horan-apk
-          path: souq-horan.apk
+          path: app/build/outputs/apk/debug/*.apk
